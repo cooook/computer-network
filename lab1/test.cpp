@@ -32,13 +32,8 @@ public:
     bool ParseURL() {
         char* pos = strstr(url, "http://");
         if (pos == NULL)
-            pos = strstr(url, "https://");
-        else 
-            pos += strlen("http://");
-        if (pos == NULL)
             return false; 
-        else 
-            pos += strlen("https://");
+        pos += strlen("http://");
         if (!strstr(pos, "/"))
             return false;
         host = (char*)malloc(0x1000);
@@ -76,7 +71,7 @@ public:
         }
 
         char *request = (char*)malloc(strlen(resource) + strlen(host) + 0x1000);
-        sprintf(request, "GET %s HTTP/1.1\r\nHost: %s\r\nCookie: Hm_lvt_667639aad0d4654c92786a241a486361=1635247526; _ga=GA1.2.1480152237.1635247527; _gid=GA1.2.716570091.1635247527; likes=; Hm_lpvt_667639aad0d4654c92786a241a486361=1635257484; _gat_gtag_UA_61934506_5=1\r\nCache-Control: max-age=0\r\nUpgrade-Insecure-Requests: 1\r\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36\r\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9\r\nConnection: close\r\n\r\n", resource, host);
+        sprintf(request, "GET %s HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n\r\n", resource, host);
         printf("%s", request);
         if (send(sock, request, strlen(request), 0) == -1) {
             printf("Error! Can't send\n");
@@ -104,11 +99,15 @@ public:
     }
 } ;
 
+void bfs(HttpResponse *http) {
+    
+}
+
 int main() {
     HttpResponse * res = new HttpResponse;
     char *response;
     int byte = 0;
-    res -> SetURL("https://bing.ioliu.cn/");
+    res -> SetURL("http://blog.cooook.icu/");
     res -> GetHttpResponse(response, byte);
     printf("%s", response);
     free(response);
