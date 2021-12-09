@@ -12,7 +12,7 @@
 #include <thread>
 #include <list>
 
-#define PORT 7000
+#define PORT 8888
 #define IP "127.0.0.1"
 
 int s;
@@ -26,7 +26,6 @@ void getConn()
     {
         int conn = accept(s, (struct sockaddr *)&servaddr, &len);
         li.push_back(conn);
-        printf("%d\n", conn); 
     }
 }
 
@@ -37,7 +36,6 @@ void getData()
     tv.tv_usec = 0;
     while (1)
     {
-        printf("%d\n", li.size());
         std::list<int>::iterator it;
         for (it = li.begin(); it != li.end(); ++it)
         {

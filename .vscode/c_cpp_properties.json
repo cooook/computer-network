@@ -1,0 +1,21 @@
+{
+    "configurations": [
+        {
+            "name": "Mac",
+            "includePath": [
+                "${workspaceFolder}/**"
+            ],
+            "defines": [],
+            "macFrameworkPath": [],
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "gnu17",
+            "cppStandard": "gnu++14",
+            "intelliSenseMode": "macos-clang-arm64",
+            "compilerArgs": [
+                "-I /opt/homebrew/Cellar/mysql++/3.3.0_1/include/mysql++",
+                "-I /opt/homebrew/Cellar/mysql/8.0.27/include/mysql"
+            ]
+        }
+    ],
+    "version": 4
+}
