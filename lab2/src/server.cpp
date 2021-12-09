@@ -83,29 +83,26 @@ void Remove_Sock(int fd) {
 }
 
 void RecvFromSock(int fd) {
-    static char message[0x1000], name[0x100];
+    static char message[0x1000], name[0x100], buffer[0x2000];
     memset(message, 0, sizeof(message));
     memset(name, 0, sizeof(name));
-    int len = recv(fd, message, sizeof(message) - 0x20, 0);
+    memset(buffer, 0, sizeof(buffer));
+    int len = recv(fd, buffer, sizeof(buffer) - 0x20, 0);
     if (len <= 0)
         Remove_Sock(fd);
-    while (true) {
-        send(fd, "Which one do you want to send?\n", sizeof("Which one do you want to send?\n"), 0);
-        int len1 = recv(fd, name, sizeof(name) - 1, 0);
-        if (len1 <= 0)
-            Remove_Sock(fd); 
-        std::string tmp_name = std::string(name);
-        if (!id_table.count(tmp_name)) {
-            send(fd, "No such people!\n", sizeof("No such people!\n"), 0);
-            continue;
-        }
-        else {
-            sprintf(message, "Send from %s:%s\n", name_table[fd], message);
-            send(id_table[tmp_name], message, len, 0);
-            send(fd, "Success!\n", sizeof("Success!\n"), 0);
-            break; 
-        }
-    }    
+    
+    sscanf(buffer, "{__id}={%s}:{__message}={%s}", name, message);
+
+    std::string tmp_name = std::string(name);
+
+    if (!id_table.count(tmp_name)) {
+        send(fd, "No such people!\n", sizeof("No such people!\n"), 0);
+    }
+    else {
+        sprintf(buffer, "Send from %s:%s\n", name_table[fd].c_str(), message);
+        send(id_table[tmp_name], buffer, strlen(buffer), 0);
+        send(fd, "Success!\n", sizeof("Success!\n"), 0);
+    }
 }
 
 void DealSock() {

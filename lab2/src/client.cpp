@@ -11,12 +11,30 @@
 
 #define MYPORT 8888
 #define BUFFER_SIZE 1024
+int sock_cli;
+fd_set rfds;
+struct timeval tv;
+int retval, maxfd;
+
+
+void login() {
+    static char buffer[BUFFER_SIZE], name[BUFFER_SIZE];
+    while (true) {
+        int len = recv(sock_cli, buffer, sizeof(buffer), 0);
+        if (!strcmp(buffer, "Login success!\n")) {
+            puts(buffer);
+            fgets(name, sizeof(name) - 1, stdin);
+            send(sock_cli, name, sizeof(name), 0);
+        }
+        else {
+            puts(buffer);
+            break; 
+        }
+    }
+}
+
 int main()
 {
-    int sock_cli;
-    fd_set rfds;
-    struct timeval tv;
-    int retval, maxfd;
 
     ///定义sockfd
     sock_cli = socket(AF_INET, SOCK_STREAM, 0);
@@ -33,6 +51,8 @@ int main()
         perror("connect");
         exit(1);
     }
+
+    login();
 
     while (1)
     {
@@ -75,8 +95,17 @@ int main()
             /*用户输入信息了,开始处理信息并发送*/
             if (FD_ISSET(0, &rfds))
             {
-                char sendbuf[BUFFER_SIZE];
+                static char name[BUFFER_SIZE];
+                static char sendbuf[BUFFER_SIZE];
+
+
+                printf("您想给谁发消息?\n");
+                fgets(name, sizeof(name), stdin);
+                printf("您想发送什么消息?\n");
                 fgets(sendbuf, sizeof(sendbuf), stdin);
+
+                sprintf(sendbuf, "{__id}={%s}:{__message}={%s}", name, sendbuf);
+
                 send(sock_cli, sendbuf, strlen(sendbuf), 0); //发送
                 memset(sendbuf, 0, sizeof(sendbuf));
             }
