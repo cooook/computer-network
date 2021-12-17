@@ -47,13 +47,14 @@ void login(int sock) {
             send(sock, "Plz Change your name!\n", sizeof("Plz Change your name!\n"), 0);
         }
     }
+    printf("%s Login!\n", name);
     send(sock, "Login success!\n", sizeof("Login success!\n"), 0);
 }
 
 void Set_fdArray(int fd, int events) {
     p_fdArray[fd].fd = fd;
     p_fdArray[fd].events = events;
-    p_fdArray[fd].revents = 0;
+    // p_fdArray[fd].revents = 0;
 }
 
 void GetConnection() {
@@ -61,11 +62,13 @@ void GetConnection() {
         int connection_sock = accept(sock, (struct sockaddr*)&serverAddr, &len);
         
         Set_fdArray(connection_sock, POLLIN | POLLOUT | POLLHUP);
+        printf("sock=%d\n", connection_sock);
         
         Size = std::max(Size, connection_sock); 
         if (MAXN - Size < 0x50) {
             MAXN <<= 1;
             p_fdArray = (pollfd *)realloc(p_fdArray, sizeof(pollfd) * MAXN);
+            memset(p_fdArray + sizeof(pollfd) * MAXN / 2, 0, sizeof(pollfd) * MAXN / 2);
         }
         std::thread login_thread(login, connection_sock);
         login_thread.detach();
@@ -77,9 +80,8 @@ void Remove_Sock(int fd) {
     name_table.erase(fd); 
     p_fdArray[fd].fd = 0;
     p_fdArray[fd].events = 0;
-    p_fdArray[fd].revents = 0;
     if (Size == fd) 
-        while (!p_fdArray[Size].fd == 0) --Size; 
+        while (p_fdArray[Size].fd == 0) --Size; 
 }
 
 void RecvFromSock(int fd) {
@@ -92,6 +94,7 @@ void RecvFromSock(int fd) {
         Remove_Sock(fd);
     
     sscanf(buffer, "{__id}={%s}:{__message}={%s}", name, message);
+    printf("name:%s\nmessage:%s\n", name, message);
 
     std::string tmp_name = std::string(name);
 
@@ -111,8 +114,11 @@ void DealSock() {
         if (!p_fdArray[i].fd)
             continue;
         fd = p_fdArray[i].fd;
-        if (fd == sock)
-            continue; 
+        if (fd == sock) {
+            std::thread getconnection_thread(GetConnection);
+            getconnection_thread.detach();
+            continue;
+        }
         if (p_fdArray[i].revents & POLLHUP) 
             Remove_Sock(fd);
         else if (p_fdArray[i].revents & POLLIN) {
@@ -123,14 +129,15 @@ void DealSock() {
 }
 
 void broadcast() {
-    static char buf[0x1000];
+    static char buf[0x1000], buffer[0x1000];
     while (true) {
         fgets(buf, sizeof(buf) - 0x20, stdin);
-        sprintf(buf, "Send from server:%s\n", buf);
+        sprintf(buffer, "Send from server:%s\n", buf);
+        printf("%s", buffer);
         for (int i = 2; i <= Size; ++i) {
             if (!p_fdArray[i].fd)
                 continue;
-            send(i, buf, strlen(buf), 0);
+            send(i, buffer, strlen(buffer), 0);
         }
     }
 }
@@ -154,16 +161,19 @@ int main() {
 
     len = sizeof(serverAddr);
     p_fdArray = (pollfd *)malloc(sizeof(pollfd) * MAXN);
-    memset(p_fdArray, 0, sizeof(p_fdArray));
+    memset(p_fdArray, 0, sizeof(pollfd) * MAXN);
+    Set_fdArray(sock, POLLIN | POLLOUT);
     
-    std::thread get_Connection(GetConnection);
-    get_Connection.detach();
+    // std::thread get_Connection(GetConnection);
+    // get_Connection.detach();
 
     std::thread broadcast_thread(broadcast);
     broadcast_thread.detach();
 
     while (1) {
         int n = poll(p_fdArray, MAXN, -1);
+        printf("n=%d\n", n);
+        printf("%d\n", p_fdArray[4].revents);
         if (n <= 0) {
             puts("Error!");
             continue; 

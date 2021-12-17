@@ -21,7 +21,7 @@ void login() {
     static char buffer[BUFFER_SIZE], name[BUFFER_SIZE];
     while (true) {
         int len = recv(sock_cli, buffer, sizeof(buffer), 0);
-        if (!strcmp(buffer, "Login success!\n")) {
+        if (strcmp(buffer, "Login success!\n")) {
             puts(buffer);
             fgets(name, sizeof(name) - 1, stdin);
             send(sock_cli, name, sizeof(name), 0);
@@ -67,7 +67,7 @@ int main()
         if (maxfd < sock_cli)
             maxfd = sock_cli;
         /*设置超时时间*/
-        tv.tv_sec = 10;
+        tv.tv_sec = 2;
         tv.tv_usec = 0;
         /*等待聊天*/
         retval = select(maxfd + 1, &rfds, NULL, NULL, &tv);
@@ -84,6 +84,7 @@ int main()
         else
         {
             /*服务器发来了消息*/
+
             if (FD_ISSET(sock_cli, &rfds))
             {
                 char recvbuf[BUFFER_SIZE];
@@ -91,23 +92,26 @@ int main()
                 len = recv(sock_cli, recvbuf, sizeof(recvbuf), 0);
                 printf("%s", recvbuf);
                 memset(recvbuf, 0, sizeof(recvbuf));
+                continue;
             }
             /*用户输入信息了,开始处理信息并发送*/
+            printf("您想给谁发消息?\n");
             if (FD_ISSET(0, &rfds))
             {
                 static char name[BUFFER_SIZE];
                 static char sendbuf[BUFFER_SIZE];
+                static char buffer[BUFFER_SIZE << 1]; 
 
 
-                printf("您想给谁发消息?\n");
+                
                 fgets(name, sizeof(name), stdin);
                 printf("您想发送什么消息?\n");
                 fgets(sendbuf, sizeof(sendbuf), stdin);
 
-                sprintf(sendbuf, "{__id}={%s}:{__message}={%s}", name, sendbuf);
-
-                send(sock_cli, sendbuf, strlen(sendbuf), 0); //发送
-                memset(sendbuf, 0, sizeof(sendbuf));
+                sprintf(buffer, "{__id}={%s}:{__message}={%s}", name, sendbuf);
+                printf("%s\n len = %d\n", buffer, strlen(buffer));
+                send(sock_cli, buffer, strlen(buffer), 0); //发送
+                memset(buffer, 0, sizeof(buffer));
             }
         }
     }

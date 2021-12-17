@@ -57,7 +57,7 @@ void InsertFd(struct pollfd *fds, int fd, int flag)//此处flag是为了判断�
 			fds[i].events |= POLLIN; 
 			if(flag)
 			{
-				fds[i].events |= POLLRDHUP;
+				fds[i].events |= POLLHUP;
 			}
  
 			break;
@@ -135,7 +135,7 @@ void DealFinishFd(struct pollfd *fds, int listenfd)
 			GetClientLink(fd, fds);
 			//获取连接
 		}
-		else if(fds[i].revents & POLLRDHUP)
+		else if(fds[i].revents & POLLHUP)
 		{
 			UnlinkClient(fd, fds);
 			//断开连接
