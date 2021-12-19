@@ -68,10 +68,6 @@ void Remove_Sock(int fd) {
     name_table.erase(fd); 
 }
 
-bool parse(char *buffer, char *message, char *name) {
-    
-}
-
 void RecvFromSock(int fd) {
     static char message[0x1000], name[0x100], buffer[0x2000];
     while (true) {
@@ -86,8 +82,7 @@ void RecvFromSock(int fd) {
             Remove_Sock(fd);
             break; 
         }
-        sscanf(buffer, "{__id}={%s}:{__message}={%s}", name, message);
-        // if (!)
+        sscanf(buffer, "{__id}={%s }:{__message}={%s }", name, message);
         printf("name:%s\nmessage:%s\n", name, message);
 
 

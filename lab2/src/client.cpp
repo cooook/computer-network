@@ -24,9 +24,8 @@ void login() {
         int len = recv(sock_cli, buffer, sizeof(buffer), 0);
         if (strcmp(buffer, "Login success!\n")) {
             printf("%s", buffer);
-            // fgets(name, sizeof(name) - 1, stdin);
             scanf("%s", name);
-            send(sock_cli, name, sizeof(name), 0);
+            send(sock_cli, name, strlen(name), 0);
         }
         else {
             printf("%s", buffer);
@@ -44,6 +43,7 @@ void login() {
 void RecvHandler() {
     char buf[0x1000];
     while (true) {
+        memset(buf, 0, sizeof(buf));
         if (recv(sock_cli, buf, sizeof(buf), 0) <= 0) 
             break; 
         printf("%s", buf);
@@ -57,15 +57,13 @@ void SendHandler() {
     while (1)
     {
         printf("您想给谁发消息?\n");
-        // fgets(name, sizeof(name), stdin);
         scanf("%s", name);
         if (strcmp(name, "quit") == 0)
             break; 
         printf("您想发送什么消息?\n");
         scanf("%s", sendbuf);
-        // fgets(sendbuf, sizeof(sendbuf), stdin);
-        sprintf(buffer, "{__id}={%s}:{__message}={%s}", name, sendbuf);
-        printf("%s\n len = %d\n", buffer, strlen(buffer));
+        sprintf(buffer, "{__id}={%s }:{__message}={%s }", name, sendbuf);
+        // printf("%s\n len = %d\n", buffer, strlen(buffer));
         send(sock_cli, buffer, strlen(buffer), 0); //发送
         memset(buffer, 0, sizeof(buffer));
     }

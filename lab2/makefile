@@ -16,7 +16,7 @@ client_obj = $(OBJ)/client.o
 $(shell if [ ! -e $(OBJ) ];then mkdir -p $(OBJ); fi)
 $(shell if [ ! -e $(BIN) ];then mkdir -p $(BIN); fi)
 
-CFLAGS = -I /opt/homebrew/Cellar/mysql++/3.3.0_1/include/mysql++ -I /opt/homebrew/Cellar/mysql/8.0.27/include/mysql -pthread -std=c++11 -g
+CFLAGS = -I /opt/homebrew/Cellar/mysql++/3.3.0_1/include/mysql++ -I /opt/homebrew/Cellar/mysql/8.0.27/include/mysql -pthread -std=c++20 -g
 
 build : $(server_obj) $(client_obj)
 	$(CC) $(CFLAGS) -o $(server_bin) $(server_obj)
