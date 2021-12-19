@@ -8,28 +8,66 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <sys/shm.h>
+# include <thread>
 
 #define MYPORT 8888
 #define BUFFER_SIZE 1024
 int sock_cli;
-fd_set rfds;
-struct timeval tv;
-int retval, maxfd;
 
+
+void RecvHandler(); 
+void SendHandler();
 
 void login() {
     static char buffer[BUFFER_SIZE], name[BUFFER_SIZE];
     while (true) {
         int len = recv(sock_cli, buffer, sizeof(buffer), 0);
         if (strcmp(buffer, "Login success!\n")) {
-            puts(buffer);
-            fgets(name, sizeof(name) - 1, stdin);
+            printf("%s", buffer);
+            // fgets(name, sizeof(name) - 1, stdin);
+            scanf("%s", name);
             send(sock_cli, name, sizeof(name), 0);
         }
         else {
-            puts(buffer);
+            printf("%s", buffer);
             break; 
         }
+    }
+
+    std::thread recvThread(RecvHandler);
+    recvThread.detach();
+
+    std::thread sendThread(SendHandler);
+    sendThread.detach();
+}
+
+void RecvHandler() {
+    char buf[0x1000];
+    while (true) {
+        if (recv(sock_cli, buf, sizeof(buf), 0) <= 0) 
+            break; 
+        printf("%s", buf);
+    }
+}
+
+void SendHandler() {
+    static char name[BUFFER_SIZE];
+    static char sendbuf[BUFFER_SIZE];
+    static char buffer[BUFFER_SIZE << 1]; 
+    while (1)
+    {
+        printf("您想给谁发消息?\n");
+        // fgets(name, sizeof(name), stdin);
+        scanf("%s", name);
+        if (strcmp(name, "quit") == 0)
+            break; 
+        printf("您想发送什么消息?\n");
+        scanf("%s", sendbuf);
+        // fgets(sendbuf, sizeof(sendbuf), stdin);
+        sprintf(buffer, "{__id}={%s}:{__message}={%s}", name, sendbuf);
+        printf("%s\n len = %d\n", buffer, strlen(buffer));
+        send(sock_cli, buffer, strlen(buffer), 0); //发送
+        memset(buffer, 0, sizeof(buffer));
     }
 }
 
@@ -54,68 +92,9 @@ int main()
 
     login();
 
-    while (1)
-    {
-        /*把可读文件描述符的集合清空*/
-        FD_ZERO(&rfds);
-        /*把标准输入的文件描述符加入到集合中*/
-        FD_SET(0, &rfds);
-        maxfd = 0;
-        /*把当前连接的文件描述符加入到集合中*/
-        FD_SET(sock_cli, &rfds);
-        /*找出文件描述符集合中最大的文件描述符*/
-        if (maxfd < sock_cli)
-            maxfd = sock_cli;
-        /*设置超时时间*/
-        tv.tv_sec = 2;
-        tv.tv_usec = 0;
-        /*等待聊天*/
-        retval = select(maxfd + 1, &rfds, NULL, NULL, &tv);
-        if (retval == -1)
-        {
-            printf("select出错，客户端程序退出\n");
-            break;
-        }
-        else if (retval == 0)
-        {
-            printf("客户端没有任何输入信息，并且服务器也没有信息到来，waiting...\n");
-            continue;
-        }
-        else
-        {
-            /*服务器发来了消息*/
-
-            if (FD_ISSET(sock_cli, &rfds))
-            {
-                char recvbuf[BUFFER_SIZE];
-                int len;
-                len = recv(sock_cli, recvbuf, sizeof(recvbuf), 0);
-                printf("%s", recvbuf);
-                memset(recvbuf, 0, sizeof(recvbuf));
-                continue;
-            }
-            /*用户输入信息了,开始处理信息并发送*/
-            printf("您想给谁发消息?\n");
-            if (FD_ISSET(0, &rfds))
-            {
-                static char name[BUFFER_SIZE];
-                static char sendbuf[BUFFER_SIZE];
-                static char buffer[BUFFER_SIZE << 1]; 
 
 
-                
-                fgets(name, sizeof(name), stdin);
-                printf("您想发送什么消息?\n");
-                fgets(sendbuf, sizeof(sendbuf), stdin);
-
-                sprintf(buffer, "{__id}={%s}:{__message}={%s}", name, sendbuf);
-                printf("%s\n len = %d\n", buffer, strlen(buffer));
-                send(sock_cli, buffer, strlen(buffer), 0); //发送
-                memset(buffer, 0, sizeof(buffer));
-            }
-        }
-    }
-
+    while (1);
     close(sock_cli);
     return 0;
 }
